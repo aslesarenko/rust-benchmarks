@@ -7,4 +7,10 @@ A collection of micro benchmarks to build intuition about performance of Rust co
 - What is effect of inlining in a loop vs function call?
 - ...
 
+### Setup
 
+```
+git clone git@github.com:aslesarenko/rust-benchmarks.git
+cd rust-benchmarks
+cargo bench
+```
