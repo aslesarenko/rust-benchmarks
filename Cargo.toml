@@ -3,6 +3,7 @@ name = "benchmarks"
 version = "0.1.0"
 authors = ["Alexander Slesarenko <avslesarenko@gmail.com>"]
 edition = "2018"
+autobenches = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

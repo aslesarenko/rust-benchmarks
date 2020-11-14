@@ -6,8 +6,6 @@ use test::Bencher;
 use std::hint::black_box;
 use typed_arena::Arena;
 
-mod helpers;
-
 const NUM_ITEMS: usize = 10000;
 const EXPECTED_SUM: i32 = 49_995_000;
 

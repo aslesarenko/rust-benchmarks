@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
-use benchmarks::types::{Int, Float};
 use std::ops::Mul;
+use crate::types::{Int, Float};
 
 #[inline(never)]
 pub fn identity<T>(x: T) -> T { x }

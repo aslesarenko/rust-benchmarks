@@ -6,10 +6,7 @@ extern crate test;
 use test::Bencher;
 use test::black_box;
 use benchmarks::types::{Int, Float};
-
-mod helpers;
-
-use helpers::*;
+use benchmarks::helpers::*;
 
 const NUM_ITEMS: usize = 1000;
 
