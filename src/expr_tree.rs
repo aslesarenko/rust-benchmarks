@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 use std::ops::Add;
+use typed_arena::Arena;
 
 pub struct Attribute {
     pub name: String,
@@ -20,7 +21,6 @@ pub struct ExprLit {
     pub lit: Lit,
 }
 
-
 pub enum BinOp {
     /// The `+` operator (addition)
     Add,
@@ -28,51 +28,53 @@ pub enum BinOp {
     Mul,
 }
 
-pub struct ExprBinary {
+pub struct ExprBinary<'a> {
     pub attrs: Vec<Attribute>,
-    pub left: Box<Expr>,
+    pub left: &'a Expr<'a>,
     pub op: BinOp,
-    pub right: Box<Expr>,
+    pub right: &'a Expr<'a>,
 }
 
-impl Add for Expr {
-    type Output = ExprBinary;
+impl<'a> Add for &'a Expr<'a> {
+    type Output = ExprBinary<'a>;
 
     fn add(self, rhs: Self) -> Self::Output {
         ExprBinary {
             attrs: vec![],
-            left: Box::new(self),
+            left: self,
             op: BinOp::Add,
-            right: Box::new(rhs),
+            right: rhs,
         }
     }
 }
 
-pub enum Expr {
+pub enum Expr<'a> {
     /// A literal in place of an expression: `1`, `"foo"`.
     Lit(ExprLit),
     /// A binary operation: `a + b`, `a * b`.
-    Binary(ExprBinary),
+    Binary(ExprBinary<'a>),
 }
-impl Expr {
+impl<'a> Expr<'a> {
     pub fn str_lit(l: &str) -> Expr {
       Expr::lit(Lit::Str(LitStr(l.into())))
     }
-    pub fn str_int(i: i32) -> Expr {
+    pub fn int_lit(i: i32) -> Expr<'a> {
       Expr::lit(Lit::Int(LitInt(i)))
     }
-    pub fn lit(l: Lit) -> Expr {
+    pub fn lit(l: Lit) -> Expr<'a> {
         Expr::Lit(ExprLit { attrs: vec![], lit: l, })
     }
 }
 
-pub struct Prog {
-    root: Expr
+pub struct ExprTree<'a> {
+    expr_arena: Arena<Expr<'a>>,
+    root: Expr<'a>
 }
 
-impl Prog {
-    pub fn binary(op: ExprBinary) -> Self {
-        Prog {
+impl<'a> ExprTree<'a> {
+    pub fn binary(op: ExprBinary<'a>) -> Self {
+        ExprTree {
+            expr_arena: Arena::new(),
             root: Expr::Binary(op)
         }
     }
