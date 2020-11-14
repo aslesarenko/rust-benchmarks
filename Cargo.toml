@@ -10,3 +10,8 @@ edition = "2018"
 
 [profile.bench]
 opt-level = 3
+
+[[bench]]
+name = "benchmarks"
+path = "benches/lib.rs"
+test = true
