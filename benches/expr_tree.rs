@@ -5,21 +5,23 @@ use benchmarks::expr_tree::{ExprTree, Expr};
 use std::borrow::BorrowMut;
 use typed_arena::Arena;
 
-const NUM_ITEMS: usize = 10000;
+const NUM_ITEMS: usize = 1000;
 
 fn create_tree<'a>(t: &'a ExprTree<'a>)  {
-    let l = t.str_lit("1");
-    let tup = t.tuple(vec![l]);
-    t.set_root(tup);
+    let l = t.str_lit("");
+    let r = t.str_lit("");
+    let op = t.binary(l, r);
+    let i = t.int_lit(10);
+    t.set_root(t.binary(op, i));
 }
 
 #[bench]
-fn loop_create_prog(b: &mut Bencher) {
+fn loop_create_tree_arena(b: &mut Bencher) {
     b.iter(||{
+        let arena = Arena::new();
+        let t = ExprTree::new(&arena);
         for _ in 0..NUM_ITEMS {
-            let arena = Arena::new();
-            let mut t = ExprTree::new(arena);
-            create_tree(&t);
+            black_box(create_tree(&t));
             // let mut t = ExprTree::new(|arena| arena.alloc(Expr::int_lit(10)));
             // black_box(t);
         }

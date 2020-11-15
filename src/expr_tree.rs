@@ -4,14 +4,22 @@ use std::ops::Add;
 use typed_arena::Arena;
 use std::borrow::Borrow;
 use std::cell::Cell;
+use std::rc::Rc;
+use std::fmt::{Debug, Formatter, Pointer};
+use core::fmt;
 
+#[derive(Debug)]
 pub struct Attribute {
     pub name: String,
 }
 
+#[derive(Debug)]
 pub struct LitStr(String);
+
+#[derive(Debug)]
 pub struct LitInt(i32);
 
+#[derive(Debug)]
 pub enum Lit {
     /// A UTF-8 string literal: `"foo"`.
     Str(LitStr),
@@ -19,11 +27,13 @@ pub enum Lit {
     Int(LitInt),
 }
 
+#[derive(Debug)]
 pub struct ExprLit {
     pub attrs: Vec<Attribute>,
     pub lit: Lit,
 }
 
+#[derive(Debug)]
 pub enum BinOp {
     /// The `+` operator (addition)
     Add,
@@ -31,6 +41,7 @@ pub enum BinOp {
     Mul,
 }
 
+#[derive(Debug)]
 pub struct ExprBinary<'a> {
     pub attrs: Vec<Attribute>,
     pub left: &'a Expr<'a>,
@@ -77,14 +88,25 @@ impl<'a> Add for &'a Expr<'a> {
     }
 }
 
+impl Debug for Expr<'_> {
+
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Expr::Lit(l) => l.fmt(f)?,
+            Expr::Binary(op) => op.fmt(f)?,
+            Expr::Tuple(t) => t.fmt(f)?
+        };
+        Ok(())
+    }
+}
 
 pub struct ExprTree<'a> {
-    expr_arena: Arena<Expr<'a>>,
+    expr_arena: &'a Arena<Expr<'a>>,
     root: Cell<Option<&'a Expr<'a>>>
 }
 
 impl<'a> ExprTree<'a> {
-    pub fn new(expr_arena: Arena<Expr<'a>>) -> Self {
+    pub fn new(expr_arena: &'a Arena<Expr<'a>>) -> Self {
         ExprTree::<'a> {
             expr_arena,
             root: Cell::new(None)
@@ -101,9 +123,30 @@ impl<'a> ExprTree<'a> {
     pub fn str_lit(&'a self, s: &str) -> &'a Expr<'a> {
         self.expr_arena.alloc(Expr::str_lit(s))
     }
+    pub fn int_lit(&'a self, i: i32) -> &'a Expr<'a> {
+        self.expr_arena.alloc(Expr::int_lit(i))
+    }
     pub fn tuple(&'a self, elems: Vec<&'a Expr<'a>>) -> &'a Expr<'a> {
         self.expr_arena.alloc(Expr::<'a>::tuple(elems))
     }
+    pub fn binary(&'a self, l: &'a Expr<'a>, r: &'a Expr<'a>) -> &'a Expr<'a> {
+        self.expr_arena.alloc(Expr::Binary(l + r))
+    }
     pub fn set_root(&self, r: &'a Expr<'a>) {
         self.root.set(Some(r));
-    }}
+    }
+}
+impl Debug for ExprTree<'_> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let s = format!("ExprTree({:?})", self.root);
+        f.write_str(&s)
+    }
+}
+// impl ToString for ExprTree<'_> {
+//     fn to_string(&self) -> String {
+//         match self.root.get() {
+//             Some(root) => root.to_string(),
+//             None => "ExprTree()".to_owned()
+//         }
+//     }
+// }

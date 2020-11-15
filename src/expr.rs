@@ -58,7 +58,7 @@ impl Expr {
     pub fn str_lit(l: &str) -> Expr {
       Expr::lit(Lit::Str(LitStr(l.into())))
     }
-    pub fn str_int(i: i32) -> Expr {
+    pub fn int_lit(i: i32) -> Expr {
       Expr::lit(Lit::Int(LitInt(i)))
     }
     pub fn lit(l: Lit) -> Expr {
@@ -66,13 +66,13 @@ impl Expr {
     }
 }
 
-pub struct Prog {
+pub struct ExprTree {
     root: Expr
 }
 
-impl Prog {
+impl ExprTree {
     pub fn binary(op: ExprBinary) -> Self {
-        Prog {
+        ExprTree {
             root: Expr::Binary(op)
         }
     }
