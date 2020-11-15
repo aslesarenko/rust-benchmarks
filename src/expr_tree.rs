@@ -1,6 +1,9 @@
 #![allow(dead_code)]
+#![allow(unused_imports)]
 use std::ops::Add;
 use typed_arena::Arena;
+use std::borrow::Borrow;
+use std::cell::Cell;
 
 pub struct Attribute {
     pub name: String,
@@ -35,6 +38,32 @@ pub struct ExprBinary<'a> {
     pub right: &'a Expr<'a>,
 }
 
+pub struct ExprTuple<'a> {
+    pub elems: Vec<&'a Expr<'a>>,
+}
+
+pub enum Expr<'a> {
+    /// A literal in place of an expression: `1`, `"foo"`.
+    Lit(ExprLit),
+    /// A binary operation: `a + b`, `a * b`.
+    Binary(ExprBinary<'a>),
+    /// A tuple expression: `(a, b, c, d)`.
+    Tuple(ExprTuple<'a>),
+}
+impl<'a> Expr<'a> {
+    pub fn str_lit(l: &str) -> Expr<'a> {
+      Expr::lit(Lit::Str(LitStr(l.into())))
+    }
+    pub fn int_lit(i: i32) -> Expr<'a> {
+      Expr::lit(Lit::Int(LitInt(i)))
+    }
+    pub fn lit(l: Lit) -> Expr<'a> {
+        Expr::Lit(ExprLit { attrs: vec![], lit: l, })
+    }
+    pub fn tuple(elems: Vec<&'a Expr<'a>>) -> Expr<'a> {
+        Expr::Tuple(ExprTuple { elems })
+    }
+}
 impl<'a> Add for &'a Expr<'a> {
     type Output = ExprBinary<'a>;
 
@@ -48,34 +77,33 @@ impl<'a> Add for &'a Expr<'a> {
     }
 }
 
-pub enum Expr<'a> {
-    /// A literal in place of an expression: `1`, `"foo"`.
-    Lit(ExprLit),
-    /// A binary operation: `a + b`, `a * b`.
-    Binary(ExprBinary<'a>),
-}
-impl<'a> Expr<'a> {
-    pub fn str_lit(l: &str) -> Expr {
-      Expr::lit(Lit::Str(LitStr(l.into())))
-    }
-    pub fn int_lit(i: i32) -> Expr<'a> {
-      Expr::lit(Lit::Int(LitInt(i)))
-    }
-    pub fn lit(l: Lit) -> Expr<'a> {
-        Expr::Lit(ExprLit { attrs: vec![], lit: l, })
-    }
-}
 
 pub struct ExprTree<'a> {
     expr_arena: Arena<Expr<'a>>,
-    root: Expr<'a>
+    root: Cell<Option<&'a Expr<'a>>>
 }
 
 impl<'a> ExprTree<'a> {
-    pub fn binary(op: ExprBinary<'a>) -> Self {
-        ExprTree {
-            expr_arena: Arena::new(),
-            root: Expr::Binary(op)
+    pub fn new(expr_arena: Arena<Expr<'a>>) -> Self {
+        ExprTree::<'a> {
+            expr_arena,
+            root: Cell::new(None)
         }
     }
-}
+
+    // pub fn build<F>(f: F) -> Self  where F: FnOnce(&'a Self) -> &'a Expr<'a> {
+    //     let t = ExprTree::new();
+    //     let root = f(&t);
+    //     t.root.set(Some(root));
+    //     t
+    // }
+
+    pub fn str_lit(&'a self, s: &str) -> &'a Expr<'a> {
+        self.expr_arena.alloc(Expr::str_lit(s))
+    }
+    pub fn tuple(&'a self, elems: Vec<&'a Expr<'a>>) -> &'a Expr<'a> {
+        self.expr_arena.alloc(Expr::<'a>::tuple(elems))
+    }
+    pub fn set_root(&self, r: &'a Expr<'a>) {
+        self.root.set(Some(r));
+    }}
