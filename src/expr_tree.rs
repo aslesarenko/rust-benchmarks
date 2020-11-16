@@ -136,17 +136,37 @@ impl<'a> ExprTree<'a> {
         self.root.set(Some(r));
     }
 }
+
 impl Debug for ExprTree<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let s = format!("ExprTree({:?})", self.root);
+        let s = format!("ExprTree({:#?})", self.root);
         f.write_str(&s)
     }
 }
-// impl ToString for ExprTree<'_> {
-//     fn to_string(&self) -> String {
-//         match self.root.get() {
-//             Some(root) => root.to_string(),
-//             None => "ExprTree()".to_owned()
-//         }
-//     }
-// }
+
+#[cfg(test)]
+mod tests {
+    use typed_arena::Arena;
+    use crate::expr_tree::ExprTree;
+
+    fn create_tree2<'a>(t: &'a ExprTree<'a>)  {
+        let l = t.str_lit("");
+        let r = t.str_lit("");
+        let op = t.binary(l, r);
+        let i10 = t.int_lit(10);
+        let i20 = t.int_lit(20);
+        let i30 = t.int_lit(30);
+        let i40 = t.int_lit(40);
+        t.set_root(t.binary(t.binary(t.binary(t.binary(op, i10), i20), i30), i40));
+    }
+
+
+    #[test]
+   fn test() {
+       let arena = Arena::new();
+       let t = ExprTree::new(&arena);
+       create_tree2(&t);
+       let s = format!("{:#?}", t);
+       println!("{}", s)
+   }
+}

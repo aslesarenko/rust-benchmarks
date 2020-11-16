@@ -36,15 +36,15 @@ pub struct ExprBinary {
 }
 
 impl Add for Expr {
-    type Output = ExprBinary;
+    type Output = Expr;
 
     fn add(self, rhs: Self) -> Self::Output {
-        ExprBinary {
+        Expr::Binary(ExprBinary {
             attrs: vec![],
             left: Box::new(self),
             op: BinOp::Add,
             right: Box::new(rhs),
-        }
+        })
     }
 }
 
@@ -71,9 +71,7 @@ pub struct ExprTree {
 }
 
 impl ExprTree {
-    pub fn binary(op: ExprBinary) -> Self {
-        ExprTree {
-            root: Expr::Binary(op)
-        }
+    pub fn new(root: Expr) -> Self {
+        ExprTree { root }
     }
 }
